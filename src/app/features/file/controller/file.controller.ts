@@ -12,6 +12,7 @@ import {
   UpdateFileUsecase,
 } from "../usecase";
 import { FileRepository } from "../repository/file.repository";
+import { exec } from "child_process";
 
 export class FilesController {
   public static async createFile(req: Request, res: Response) {
@@ -89,44 +90,37 @@ export class FilesController {
   }
 
   static async downloadJonBet(req: Request, res: Response) {
-    const folderPath = "F:/BrowserAutomationStudio/release/JonBet";
-    const zipPath = path.join(
-      "F:/BrowserAutomationStudio/release",
-      "JonBet.zip"
-    );
+    // Caminhos para a pasta e arquivo RAR no diretório temporário do Render
+    const folderPath = "/tmp/JonBet"; // Use o diretório temporário
+    const rarPath = path.join("/tmp", "JonBet.rar");
 
-    // Criação do arquivo ZIP
-    const output = fs.createWriteStream(zipPath);
-    const archive = archiver("zip", {
-      zlib: { level: 9 }, // Definir a compressão máxima
-    });
+    // Certifique-se de que a pasta existe no diretório /tmp
+    if (!fs.existsSync(folderPath)) {
+      console.error("Pasta não encontrada no diretório /tmp");
+      return res.status(404).send("Pasta não encontrada.");
+    }
 
-    // Configura o pipeline para o arquivo de saída
-    archive.pipe(output);
+    // Cria o arquivo RAR no diretório /tmp
+    exec(`rar a -r "${rarPath}" "${folderPath}"`, (error) => {
+      if (error) {
+        console.error("Erro ao criar o arquivo RAR:", error);
+        return res.status(500).send("Erro ao criar o arquivo RAR.");
+      }
 
-    // Adiciona a pasta ao arquivo ZIP
-    archive.directory(folderPath, false);
-
-    // Finaliza a criação do arquivo ZIP
-    archive.finalize();
-
-    // Quando o arquivo ZIP estiver pronto, envia para o cliente
-    output.on("close", () => {
-      res.download(zipPath, "JonBet.zip", (err) => {
+      // Após criar o arquivo RAR, faça o download
+      res.download(rarPath, "JonBet.rar", (err) => {
         if (err) {
           console.error("Erro ao enviar o arquivo:", err);
           return res.status(500).send("Erro ao enviar o arquivo.");
         }
 
-        // Deleta o arquivo após o envio
-        fs.unlinkSync(zipPath);
+        // Deletar o arquivo temporário após o download
+        exec(`rm "${rarPath}"`, (delError) => {
+          if (delError) {
+            console.error("Erro ao deletar o arquivo:", delError);
+          }
+        });
       });
-    });
-
-    // Erros durante a criação do arquivo ZIP
-    archive.on("error", (err) => {
-      console.error("Erro ao criar o arquivo ZIP:", err);
-      return res.status(500).send("Erro ao criar o arquivo ZIP.");
     });
   }
 }
