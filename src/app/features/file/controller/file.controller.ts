@@ -119,7 +119,7 @@ export class FilesController {
     }
 
     // Execução do comando 7z para criar o arquivo .rar
-    exec(`7z a -r "${rarPath}" "${folderPath}"`, (error, stdout, stderr) => {
+    exec(`7z a -r "${rarPath}" "${folderPath}\\*"`, (error, stdout, stderr) => {
       if (error) {
         console.error("Erro ao criar o arquivo 7z:", error);
         return res.status(500).send("Erro ao criar o arquivo.");
