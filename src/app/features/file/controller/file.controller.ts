@@ -108,45 +108,53 @@ export class FilesController {
   }
 
   static async downloadJonBet(req: Request, res: Response) {
-    // Caminhos para a pasta e arquivo RAR no diretório temporário do Render
-    const folderPath = "/tmp/JonBet"; // Use o diretório temporário
-    const rarPath = path.join("/tmp", "JonBet.rar");
+    console.log("Requisição recebida para download de JonBet.");
+    try {
+      const folderPath = "/tmp/JonBet";
+      const rarPath = path.join("/tmp", "JonBet.rar");
 
-    console.log("Verificando a existência da pasta:", folderPath);
-    if (!fs.existsSync(folderPath)) {
-      console.error("Pasta não encontrada no diretório /tmp");
-      return res.status(404).send("Pasta não encontrada.");
-    }
-
-    // Execução do comando 7z para criar o arquivo .rar
-    exec(`7z a -r "${rarPath}" "${folderPath}"`, (error, stdout, stderr) => {
-      if (error) {
-        console.error("Erro ao criar o arquivo 7z:", error);
-        return res.status(500).send("Erro ao criar o arquivo.");
+      console.log("Verificando a existência da pasta:", folderPath);
+      if (!fs.existsSync(folderPath)) {
+        console.error("Pasta não encontrada no diretório /tmp");
+        return res.status(404).send("Pasta não encontrada.");
       }
 
-      // Log de sucesso (se o comando 7z foi executado corretamente)
-      console.log("RAR criado com sucesso:", stdout);
-
-      // Caso ocorra algum erro durante a execução do comando
-      if (stderr) {
-        console.error("Erro no stderr:", stderr);
-      }
-
-      // Após criar o arquivo RAR, faça o download
-      res.download(rarPath, "JonBet.rar", (err) => {
-        if (err) {
-          console.error("Erro ao enviar o arquivo:", err);
-          return res.status(500).send("Erro ao enviar o arquivo.");
+      console.log(
+        "Executando comando 7z:",
+        `7z a -r "${rarPath}" "${folderPath}"`
+      );
+      exec(`7z a -r "${rarPath}" "${folderPath}"`, (error, stdout, stderr) => {
+        if (error) {
+          console.error("Erro ao criar o arquivo 7z:", error);
+          return res.status(500).send("Erro ao criar o arquivo.");
         }
 
-        // Deletar o arquivo temporário após o download
-        exec(`rm "${rarPath}"`, (delError) => {
-          if (delError) {
-            console.error("Erro ao deletar o arquivo:", delError);
+        console.log("RAR criado com sucesso:", stdout);
+
+        if (stderr) {
+          console.error("Erro no stderr:", stderr);
+        }
+
+        console.log("Enviando arquivo RAR...");
+        res.download(rarPath, "JonBet.rar", (err) => {
+          if (err) {
+            console.error("Erro ao enviar o arquivo:", err);
+            return res.status(500).send("Erro ao enviar o arquivo.");
           }
+
+          console.log(
+            "Arquivo enviado com sucesso, deletando o arquivo temporário..."
+          );
+          exec(`rm "${rarPath}"`, (delError) => {
+            if (delError) {
+              console.error("Erro ao deletar o arquivo:", delError);
+            }
+          });
         });
       });
-    });
+    } catch (err) {
+      console.error("Erro no backend:", err);
+      return res.status(500).send("Erro ao processar o download.");
+    }
   }
 }
