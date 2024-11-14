@@ -5,12 +5,18 @@ import path from "path";
 export function createServer() {
   const app = express();
 
+  const corsOptions = {
+    origin: "*", // Permite todas as origens
+    allowedHeaders: ["Content-Type", "Authorization"], // Permite cabeçalhos específicos
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  };
+
   // Middleware para tratar JSON e URL-encoded
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
   // Habilitar CORS para permitir acesso de diferentes origens
-  app.use(cors());
+  app.use(cors(corsOptions));
 
   // Servir arquivos estáticos da pasta "F:/BrowserAutomationStudio/release"
   app.use(
