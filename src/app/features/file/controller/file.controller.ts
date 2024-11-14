@@ -100,11 +100,18 @@ export class FilesController {
       return res.status(404).send("Pasta não encontrada.");
     }
 
-    // Cria o arquivo RAR no diretório /tmp
-    exec(`rar a -r "${rarPath}" "${folderPath}"`, (error) => {
+    exec(`7z a -r "${rarPath}" "${folderPath}"`, (error, stdout, stderr) => {
       if (error) {
-        console.error("Erro ao criar o arquivo RAR:", error);
-        return res.status(500).send("Erro ao criar o arquivo RAR.");
+        console.error("Erro ao criar o arquivo 7z:", error);
+        return res.status(500).send("Erro ao criar o arquivo.");
+      }
+
+      // Log de sucesso (se o comando 7z foi executado corretamente)
+      console.log("RAR criado com sucesso:", stdout);
+
+      // Caso ocorra algum erro durante a execução do comando
+      if (stderr) {
+        console.error("Erro no stderr:", stderr);
       }
 
       // Após criar o arquivo RAR, faça o download
