@@ -1,0 +1,10 @@
+POST http://localhost:8080/file HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk5YzExY2NmLTA0ZmEtNDZiZS1hN2RlLTQ1MTk5ZDZhMWU0MSIsIm5hbWUiOiJHYWJyaWVsIiwiY3BmIjoiMDExMTExMTExMTEiLCJwYXNzd29yZCI6IiQyYiQxMCRJYmRYMjZuZ0xOcy52M0JTaFlIODBlUENvNmdHRVpaZmw0UHE0emZVYmJIdS80aTNrMkVKeSIsInJvbGUiOiJhZG1pbiIsImFjdGl2ZSI6dHJ1ZSwiYWNjZXNzRXhwaXJhdGlvbiI6IjIwMjQtMTEtMTZUMDA6MzU6MTEuNDI3WiIsImlhdCI6MTczMTU0NDUxMSwiZXhwIjoxNzMxNTQ4MTExfQ.gsPJLD7XjPZuQ1ngjiTh4No7ot3ZhmGqg70EkatSLrw
+
+{
+    "filename": "JonBet.rar",
+    "filepath": "F:/BrowserAutomationStudio/release",
+    "size": 12996762,
+    "userId": "99c11ccf-04fa-46be-a7de-45199d6a1e41"
+}

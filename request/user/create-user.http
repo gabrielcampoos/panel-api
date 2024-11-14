@@ -1,0 +1,9 @@
+
+POST http://localhost:8080/user HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Gabriel",
+    "cpf": "01111111113",
+    "password": "123456a"
+}
