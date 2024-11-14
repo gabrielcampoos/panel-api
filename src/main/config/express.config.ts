@@ -1,13 +1,14 @@
 import cors from "cors";
 import express from "express";
 import path from "path";
+import fs from "fs";
 
 export function createServer() {
   const app = express();
 
   const corsOptions = {
     origin: "*", // Permite todas as origens
-    allowedHeaders: ["Content-Type", "Authorization"], // Permite cabeçalhos específicos
+    allowedHeaders: ["Content-Type", "Authorization"], // Cabeçalhos permitidos
     methods: ["GET", "POST", "PUT", "DELETE"],
   };
 
@@ -18,23 +19,32 @@ export function createServer() {
   // Habilitar CORS para permitir acesso de diferentes origens
   app.use(cors(corsOptions));
 
-  // Servir arquivos estáticos da pasta "F:/BrowserAutomationStudio/release"
+  // Configurar a pasta estática
   app.use(
-    "/files", // URL onde os arquivos serão acessados
-    express.static(path.join("F:/BrowserAutomationStudio/release")) // Caminho da pasta no servidor
+    "/files",
+    express.static(path.join("F:/BrowserAutomationStudio/release"))
   );
 
-  // Roteamento para download de arquivos com base no ID
+  // Rota para download de arquivos pelo ID
   app.get("/file/download/:id", (req, res) => {
     const fileId = req.params.id;
     const filePath = path.join("F:/BrowserAutomationStudio/release", fileId);
 
-    // Verifica se o arquivo existe antes de tentar fazer o download
-    res.download(filePath, (err) => {
+    // Verifica se o arquivo existe
+    fs.access(filePath, fs.constants.F_OK, (err) => {
       if (err) {
-        console.error("Erro ao enviar o arquivo:", err);
-        return res.status(500).send("Erro ao enviar o arquivo.");
+        console.error("Arquivo não encontrado:", filePath);
+        return res.status(404).send("Arquivo não encontrado.");
       }
+
+      // Se o arquivo existe, inicia o download
+      res.download(filePath, (downloadErr) => {
+        if (downloadErr) {
+          console.error("Erro ao enviar o arquivo:", downloadErr);
+          return res.status(500).send("Erro ao enviar o arquivo.");
+        }
+        console.log("Download concluído com sucesso para o arquivo:", fileId);
+      });
     });
   });
 
