@@ -11,7 +11,6 @@ import {
   ListFilesUsecase,
   UpdateFileUsecase,
 } from "../usecase";
-import { FileRepository } from "../repository/file.repository";
 import { exec } from "child_process";
 
 export class FilesController {
@@ -89,17 +88,37 @@ export class FilesController {
     }
   }
 
+  // Função para fazer o upload
+  public static async uploadFiles(req: Request, res: Response) {
+    try {
+      // Verifica se arquivos foram enviados
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).send("Nenhum arquivo enviado.");
+      }
+
+      // Aqui, você pode fazer qualquer processamento que precisa com os arquivos, como salvar no banco de dados
+      console.log("Arquivos carregados:", req.files);
+
+      // Retornar uma resposta de sucesso
+      return res.status(200).send("Arquivos carregados com sucesso.");
+    } catch (error) {
+      console.error("Erro ao fazer upload dos arquivos:", error);
+      return res.status(500).send("Erro ao processar o upload.");
+    }
+  }
+
   static async downloadJonBet(req: Request, res: Response) {
     // Caminhos para a pasta e arquivo RAR no diretório temporário do Render
     const folderPath = "/tmp/JonBet"; // Use o diretório temporário
     const rarPath = path.join("/tmp", "JonBet.rar");
 
-    // Certifique-se de que a pasta existe no diretório /tmp
+    console.log("Verificando a existência da pasta:", folderPath);
     if (!fs.existsSync(folderPath)) {
       console.error("Pasta não encontrada no diretório /tmp");
       return res.status(404).send("Pasta não encontrada.");
     }
 
+    // Execução do comando 7z para criar o arquivo .rar
     exec(`7z a -r "${rarPath}" "${folderPath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error("Erro ao criar o arquivo 7z:", error);
