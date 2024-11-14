@@ -111,8 +111,8 @@ export class FilesController {
   static async downloadJonBet(req: Request, res: Response) {
     console.log("Requisição recebida para download de JonBet.");
     try {
-      const folderPath = "/tmp/JonBet";
-      const rarPath = path.join("/tmp", "JonBet.rar");
+      const folderPath = "/tmp/JonBet"; // Caminho da pasta a ser compactada
+      const zipPath = path.join("/tmp", "JonBet.zip"); // Caminho onde o arquivo .zip será salvo
 
       console.log("Verificando a existência da pasta:", folderPath);
       if (!fs.existsSync(folderPath)) {
@@ -120,33 +120,39 @@ export class FilesController {
         return res.status(404).send("Pasta não encontrada.");
       }
 
-      console.log(
-        "Executando comando 7z:",
-        `7z a -r "${rarPath}" "${folderPath}"`
-      );
+      // Criando o arquivo .zip usando o Archiver
+      const output = fs.createWriteStream(zipPath);
+      const archive = archiver("zip", {
+        zlib: { level: 9 }, // Alta compressão
+      });
 
-      exec(`7z a -r "${rarPath}" "${folderPath}"`, (error, stdout, stderr) => {
-        if (error) {
-          console.error("Erro ao criar o arquivo 7z:", error);
-          return res.status(500).send("Erro ao criar o arquivo.");
+      output.on("close", () => {
+        console.log("Arquivo ZIP criado com sucesso!");
+      });
+
+      archive.on("error", (err) => {
+        console.error("Erro ao criar o arquivo ZIP:", err);
+        return res.status(500).send("Erro ao criar o arquivo.");
+      });
+
+      archive.pipe(output);
+      archive.directory(folderPath, false); // Adiciona o conteúdo da pasta sem o nome da pasta
+      await archive.finalize(); // Finaliza a criação do arquivo
+
+      // Enviar o arquivo .zip para o cliente
+      res.setHeader("Content-Type", "application/zip");
+      res.download(zipPath, "JonBet.zip", (err) => {
+        if (err) {
+          console.error("Erro ao enviar o arquivo:", err);
+          return res.status(500).send("Erro ao enviar o arquivo.");
         }
+        console.log("Arquivo enviado com sucesso.");
 
-        console.log("RAR criado com sucesso:", stdout);
-
-        res.setHeader("Content-Type", "application/octet-stream");
-        res.download(rarPath, "JonBet.rar", (err) => {
-          if (err) {
-            console.error("Erro ao enviar o arquivo:", err);
-            return res.status(500).send("Erro ao enviar o arquivo.");
+        // Deletar o arquivo temporário após o download
+        fs.unlink(zipPath, (delError) => {
+          if (delError) {
+            console.error("Erro ao deletar o arquivo:", delError);
           }
-          console.log(
-            "Arquivo enviado com sucesso, deletando o arquivo temporário..."
-          );
-          exec(`rm "${rarPath}"`, (delError) => {
-            if (delError) {
-              console.error("Erro ao deletar o arquivo:", delError);
-            }
-          });
         });
       });
     } catch (err) {
