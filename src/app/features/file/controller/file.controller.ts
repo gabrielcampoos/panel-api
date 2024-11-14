@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import * as path from "path";
-import * as fs from "fs";
-import { exec } from "child_process";
-import os from "os";
+import archiver from "archiver";
+import fs from "fs";
+import path from "path";
 import { httpHelper } from "../../../shared/utils";
 import { Result } from "../../../shared/utils/result.helper";
 import { CreateFileDto } from "../dto";
@@ -91,24 +90,43 @@ export class FilesController {
 
   static async downloadJonBet(req: Request, res: Response) {
     const folderPath = "F:/BrowserAutomationStudio/release/JonBet";
-    const rarPath = path.join(
+    const zipPath = path.join(
       "F:/BrowserAutomationStudio/release",
-      "JonBet.rar"
+      "JonBet.zip"
     );
-    exec(`rar a -r "${rarPath}" "${folderPath}"`, (error) => {
-      if (error) {
-        console.error("Erro ao criar o arquivo RAR:", error);
-        return res.status(500).send("Erro ao criar o arquivo RAR.");
-      }
 
-      res.download(rarPath, "JonBet.rar", (err) => {
+    // Criação do arquivo ZIP
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver("zip", {
+      zlib: { level: 9 }, // Definir a compressão máxima
+    });
+
+    // Configura o pipeline para o arquivo de saída
+    archive.pipe(output);
+
+    // Adiciona a pasta ao arquivo ZIP
+    archive.directory(folderPath, false);
+
+    // Finaliza a criação do arquivo ZIP
+    archive.finalize();
+
+    // Quando o arquivo ZIP estiver pronto, envia para o cliente
+    output.on("close", () => {
+      res.download(zipPath, "JonBet.zip", (err) => {
         if (err) {
           console.error("Erro ao enviar o arquivo:", err);
           return res.status(500).send("Erro ao enviar o arquivo.");
         }
 
-        exec(`del "${rarPath}"`);
+        // Deleta o arquivo após o envio
+        fs.unlinkSync(zipPath);
       });
+    });
+
+    // Erros durante a criação do arquivo ZIP
+    archive.on("error", (err) => {
+      console.error("Erro ao criar o arquivo ZIP:", err);
+      return res.status(500).send("Erro ao criar o arquivo ZIP.");
     });
   }
 }
