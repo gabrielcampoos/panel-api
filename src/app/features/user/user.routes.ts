@@ -9,7 +9,7 @@ export default () => {
   router.post("/login", UsersController.loginUser);
 
   router.get("/user", authMiddleware, UsersController.listUsers);
-  router.get("/user/:cpf", authMiddleware, UsersController.fetchUser);
+  router.get("/user/:cpf", UsersController.fetchUser);
 
   router.put("/user/:cpf", authMiddleware, UsersController.editUser);
 
